@@ -1,0 +1,131 @@
+$ python app.py init
+Listo: cargamos los datos de ejemplo
+exit: 0
+
+$ python app.py registrar 1001 certificado alta Constancia de examen 2026-06-01
+Listo: solicitud #4 registrada (area: Bedelia, vence: 2026-06-03)
+exit: 0
+
+$ python app.py registrar 1002 cambio_comision media Cambio a la comision B 2026-06-01
+Listo: solicitud #5 registrada (area: Bedelia, vence: 2026-06-06)
+exit: 0
+
+$ python app.py registrar 1003 equivalencia baja Equivalencia de bases de datos 2026-06-01
+Listo: solicitud #6 registrada (area: Departamento Academico, vence: 2026-06-11)
+exit: 0
+
+$ python app.py registrar 1003 reclamo_nota alta Revision del parcial 2026-06-01
+Listo: solicitud #7 registrada (area: Docencia, vence: 2026-06-03)
+exit: 0
+
+$ python app.py asignar 4 R1
+Listo: solicitud #4 asignada a Elena Vargas
+exit: 0
+
+$ python app.py asignar 4 R2
+Error: Pablo Medina no pertenece al area Bedelia
+exit: 1
+
+$ python app.py estado 4 en_proceso
+[aviso a martina.ruiz@example.edu] La solicitud #4 paso a: en_proceso
+Listo: solicitud #4 ahora esta en_proceso
+exit: 0
+
+$ python app.py estado 4 resuelta
+[aviso a martina.ruiz@example.edu] La solicitud #4 paso a: resuelta
+Listo: solicitud #4 ahora esta resuelta
+exit: 0
+
+$ python app.py estado 7 resuelta
+Error: no se puede resolver una solicitud que no esta en proceso
+exit: 1
+
+$ python app.py estado 3 rechazada
+[aviso a sofia.benitez@example.edu] La solicitud #3 paso a: rechazada
+Listo: solicitud #3 ahora esta rechazada
+exit: 0
+
+$ python app.py asignar 7 R3
+Listo: solicitud #7 asignada a Nora Acosta
+exit: 0
+
+$ python app.py estado 7 en_proceso
+[aviso a sofia.benitez@example.edu] La solicitud #7 paso a: en_proceso
+Listo: solicitud #7 ahora esta en_proceso
+exit: 0
+
+$ python app.py estado 7 pendiente
+Error: no se puede volver a pendiente
+exit: 1
+
+$ python app.py buscar estado=pendiente
+#5 | 1002 | cambio_comision | media | pendiente | - | Cambio a la comision B
+#6 | 1003 | equivalencia | baja | pendiente | - | Equivalencia de bases de datos
+exit: 0
+
+$ python app.py buscar prioridad=alta legajo=1001
+#4 | 1001 | certificado | alta | resuelta | Elena Vargas | Constancia de examen
+exit: 0
+
+$ python app.py buscar estado=en_proceso tipo=equivalencia
+#2 | 1002 | equivalencia | alta | en_proceso | Pablo Medina | Equivalencia de Programacion I
+exit: 0
+
+$ python app.py buscar estado=pendiente prioridad=alta
+No encontramos solicitudes
+exit: 0
+
+$ python app.py reporte
+=== Reporte de solicitudes ===
+Total: 7
+Pendientes: 2
+En proceso: 2
+Resueltas: 2
+Rechazadas: 1
+Vencidas sin cerrar: 4
+Por area:
+  Bedelia: 3
+  Departamento Academico: 2
+  Docencia: 2
+exit: 0
+
+$ python app.py reporte csv
+metrica,valor
+total,7
+pendientes,2
+en_proceso,2
+resueltas,2
+rechazadas,1
+vencidas,4
+area:Bedelia,3
+area:Departamento Academico,2
+area:Docencia,2
+exit: 0
+
+$ python app.py reporte pdf
+Error: formato de reporte invalido: pdf
+exit: 1
+
+$ python app.py registrar 9999 certificado alta Nadie 2026-06-01
+Error: el legajo 9999 no existe
+exit: 1
+
+$ python app.py registrar 1001 foo alta Tipo malo 2026-06-01
+Error: tipo de solicitud invalido: foo
+exit: 1
+
+$ python app.py registrar 1001 certificado urgente Prioridad mala 2026-06-01
+Error: prioridad invalida: urgente
+exit: 1
+
+$ python app.py registrar 1001 certificado alta     2026-06-01
+Error: la descripcion es obligatoria
+exit: 1
+
+$ python app.py asignar 1 R1
+Error: la solicitud #1 ya esta cerrada
+exit: 1
+
+$ python app.py zzz
+Error: comando desconocido zzz
+exit: 1

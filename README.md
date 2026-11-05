@@ -45,3 +45,12 @@ Una solicitud pendiente puede pasar a `en_proceso` si ya tiene un responsable de
 | R1 | Elena Vargas | Bedelia |
 | R2 | Pablo Medina | Departamento Academico |
 | R3 | Nora Acosta | Docencia |
+
+## Pruebas
+
+Antes de cambiar el código dejamos una prueba que recorre la consola y compara la salida y `datos.json` con una corrida que ya revisamos. Si falla, el comportamiento que ya usamos se movió.
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```

@@ -1,0 +1,125 @@
+{
+  "estudiantes": [
+    {
+      "legajo": "1001",
+      "nombre": "Martina Ruiz",
+      "email": "martina.ruiz@example.edu",
+      "carrera": "TUP"
+    },
+    {
+      "legajo": "1002",
+      "nombre": "Lucas Pereyra",
+      "email": "lucas.pereyra@example.edu",
+      "carrera": "TUP"
+    },
+    {
+      "legajo": "1003",
+      "nombre": "Sofia Benitez",
+      "email": "sofia.benitez@example.edu",
+      "carrera": "TUPaD"
+    }
+  ],
+  "responsables": [
+    {
+      "id": "R1",
+      "nombre": "Elena Vargas",
+      "area": "Bedelia"
+    },
+    {
+      "id": "R2",
+      "nombre": "Pablo Medina",
+      "area": "Departamento Academico"
+    },
+    {
+      "id": "R3",
+      "nombre": "Nora Acosta",
+      "area": "Docencia"
+    }
+  ],
+  "solicitudes": [
+    {
+      "id": 1,
+      "legajo": "1001",
+      "tipo": "certificado",
+      "prioridad": 2,
+      "descripcion": "Certificado de alumno regular",
+      "estado": 2,
+      "area": "Bedelia",
+      "responsable": "R1",
+      "fecha": "2026-03-01",
+      "vence": "2026-03-06"
+    },
+    {
+      "id": 2,
+      "legajo": "1002",
+      "tipo": "equivalencia",
+      "prioridad": 1,
+      "descripcion": "Equivalencia de Programacion I",
+      "estado": 1,
+      "area": "Departamento Academico",
+      "responsable": "R2",
+      "fecha": "2026-03-02",
+      "vence": "2020-03-04"
+    },
+    {
+      "id": 3,
+      "legajo": "1003",
+      "tipo": "reclamo_nota",
+      "prioridad": 3,
+      "descripcion": "Revision de nota del primer parcial",
+      "estado": 3,
+      "area": "Docencia",
+      "responsable": null,
+      "fecha": "2026-11-01",
+      "vence": "2099-01-20"
+    },
+    {
+      "id": 4,
+      "legajo": "1001",
+      "tipo": "certificado",
+      "prioridad": 1,
+      "descripcion": "Constancia de examen",
+      "estado": 2,
+      "area": "Bedelia",
+      "responsable": "R1",
+      "fecha": "2026-06-01",
+      "vence": "2026-06-03"
+    },
+    {
+      "id": 5,
+      "legajo": "1002",
+      "tipo": "cambio_comision",
+      "prioridad": 2,
+      "descripcion": "Cambio a la comision B",
+      "estado": 0,
+      "area": "Bedelia",
+      "responsable": null,
+      "fecha": "2026-06-01",
+      "vence": "2026-06-06"
+    },
+    {
+      "id": 6,
+      "legajo": "1003",
+      "tipo": "equivalencia",
+      "prioridad": 3,
+      "descripcion": "Equivalencia de bases de datos",
+      "estado": 0,
+      "area": "Departamento Academico",
+      "responsable": null,
+      "fecha": "2026-06-01",
+      "vence": "2026-06-11"
+    },
+    {
+      "id": 7,
+      "legajo": "1003",
+      "tipo": "reclamo_nota",
+      "prioridad": 1,
+      "descripcion": "Revision del parcial",
+      "estado": 1,
+      "area": "Docencia",
+      "responsable": "R3",
+      "fecha": "2026-06-01",
+      "vence": "2026-06-03"
+    }
+  ]
+}
