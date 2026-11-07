@@ -2,12 +2,69 @@
 # primera version: todo junto para poder usarla ya
 import json
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import Enum
 
 ARCHIVO = "datos.json"
 
 # estados: 0 pendiente, 1 en proceso, 2 resuelta, 3 rechazada
 # prioridad: 1 alta, 2 media, 3 baja
+
+
+class TipoSolicitud(str, Enum):
+    CERTIFICADO = "certificado"
+    CAMBIO_COMISION = "cambio_comision"
+    EQUIVALENCIA = "equivalencia"
+    RECLAMO_NOTA = "reclamo_nota"
+
+    @property
+    def area(self):
+        return _AREA_POR_TIPO[self]
+
+
+_AREA_POR_TIPO = {
+    TipoSolicitud.CERTIFICADO: "Bedelia",
+    TipoSolicitud.CAMBIO_COMISION: "Bedelia",
+    TipoSolicitud.EQUIVALENCIA: "Departamento Academico",
+    TipoSolicitud.RECLAMO_NOTA: "Docencia",
+}
+
+
+class Prioridad(str, Enum):
+    ALTA = "alta"
+    MEDIA = "media"
+    BAJA = "baja"
+
+    @property
+    def codigo(self):
+        return _CODIGO_POR_PRIORIDAD[self]
+
+    @property
+    def dias_vencimiento(self):
+        return _DIAS_POR_PRIORIDAD[self]
+
+
+_CODIGO_POR_PRIORIDAD = {
+    Prioridad.ALTA: 1,
+    Prioridad.MEDIA: 2,
+    Prioridad.BAJA: 3,
+}
+
+_DIAS_POR_PRIORIDAD = {
+    Prioridad.ALTA: 2,
+    Prioridad.MEDIA: 5,
+    Prioridad.BAJA: 10,
+}
+
+
+@dataclass(frozen=True)
+class DatosRegistro:
+    legajo: str
+    tipo: str
+    prioridad: str
+    descripcion: str
+    fecha: str | None = None
 
 
 class Sistema:
@@ -19,6 +76,16 @@ class Sistema:
             f.close()
         except:
             pass
+
+    def _guardar(self):
+        with open(ARCHIVO, "w", encoding="utf-8") as archivo:
+            json.dump(self.d, archivo, indent=2, ensure_ascii=False)
+
+    def _buscar_solicitud(self, id_solicitud):
+        for solicitud in self.d["solicitudes"]:
+            if solicitud["id"] == int(id_solicitud):
+                return solicitud
+        return None
 
     def init(self):
         self.d = {
@@ -71,13 +138,16 @@ class Sistema:
                 },
             ],
         }
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         print("Listo: cargamos los datos de ejemplo")
         return True
 
-    def registrar(self, legajo, tipo, prioridad, descripcion, fecha_str, canal, observaciones):
+    def registrar(self, datos: DatosRegistro):
+        legajo = datos.legajo
+        tipo = datos.tipo
+        prioridad = datos.prioridad
+        descripcion = datos.descripcion
+        fecha_str = datos.fecha
         est = None
         for e in self.d["estudiantes"]:
             if e["legajo"] == legajo:
@@ -85,26 +155,18 @@ class Sistema:
         if est == None:
             print("Error: el legajo " + legajo + " no existe")
             return -1
-        if tipo == "certificado":
-            area = "Bedelia"
-        elif tipo == "cambio_comision":
-            area = "Bedelia"
-        elif tipo == "equivalencia":
-            area = "Departamento Academico"
-        elif tipo == "reclamo_nota":
-            area = "Docencia"
-        else:
+        try:
+            tipo_solicitud = TipoSolicitud(tipo)
+        except ValueError:
             print("Error: tipo de solicitud invalido: " + tipo)
             return -1
-        if prioridad == "alta":
-            p = 1
-        elif prioridad == "media":
-            p = 2
-        elif prioridad == "baja":
-            p = 3
-        else:
+        area = tipo_solicitud.area
+        try:
+            prioridad_solicitud = Prioridad(prioridad)
+        except ValueError:
             print("Error: prioridad invalida: " + prioridad)
             return -1
+        p = prioridad_solicitud.codigo
         if descripcion == None or len(descripcion.strip()) == 0:
             print("Error: la descripcion es obligatoria")
             return -1
@@ -115,12 +177,7 @@ class Sistema:
             fecha = datetime.now()
         else:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
-        if p == 1:
-            vence = fecha + timedelta(days=2)
-        elif p == 2:
-            vence = fecha + timedelta(days=5)
-        else:
-            vence = fecha + timedelta(days=10)
+        vence = fecha + timedelta(days=prioridad_solicitud.dias_vencimiento)
         nuevo_id = len(self.d["solicitudes"]) + 1
         s = {
             "id": nuevo_id,
@@ -136,9 +193,7 @@ class Sistema:
         }
         # canal y observaciones por ahora no se usan
         self.d["solicitudes"].append(s)
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         print(
             "Listo: solicitud #"
             + str(nuevo_id)
@@ -151,10 +206,7 @@ class Sistema:
         return nuevo_id
 
     def cambiar_estado(self, id, nuevo):
-        x = None
-        for s in self.d["solicitudes"]:
-            if s["id"] == int(id):
-                x = s
+        x = self._buscar_solicitud(id)
         if x == None:
             print("Error: no existe la solicitud #" + str(id))
             return False
@@ -185,9 +237,7 @@ class Sistema:
             print("Error: no se puede volver a pendiente")
             return False
         x["estado"] = n
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         for e in self.d["estudiantes"]:
             if e["legajo"] == x["legajo"]:
                 print(
@@ -202,10 +252,7 @@ class Sistema:
         return True
 
     def asignar(self, id, resp_id):
-        x = None
-        for s in self.d["solicitudes"]:
-            if s["id"] == int(id):
-                x = s
+        x = self._buscar_solicitud(id)
         if x == None:
             print("Error: no existe la solicitud #" + str(id))
             return False
@@ -223,9 +270,7 @@ class Sistema:
             print("Error: " + r["nombre"] + " no pertenece al area " + x["area"])
             return False
         x["responsable"] = resp_id
-        out = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, out, indent=2, ensure_ascii=False)
-        out.close()
+        self._guardar()
         print("Listo: solicitud #" + str(x["id"]) + " asignada a " + r["nombre"])
         return True
 
@@ -282,51 +327,61 @@ class Sistema:
             )
         return l
 
-    def reporte(self, formato):
-        hoy = datetime.now().strftime("%Y-%m-%d")
-        total = len(self.d["solicitudes"])
-        pend = 0
-        proc = 0
-        res = 0
-        rech = 0
-        venc = 0
-        por_area = {}
+    def _resumen_reporte(self, hoy):
+        resumen = {
+            "total": len(self.d["solicitudes"]),
+            "pendientes": 0,
+            "en_proceso": 0,
+            "resueltas": 0,
+            "rechazadas": 0,
+            "vencidas": 0,
+            "por_area": {},
+        }
         for s in self.d["solicitudes"]:
             if s["estado"] == 0:
-                pend = pend + 1
+                resumen["pendientes"] += 1
             if s["estado"] == 1:
-                proc = proc + 1
+                resumen["en_proceso"] += 1
             if s["estado"] == 2:
-                res = res + 1
+                resumen["resueltas"] += 1
             if s["estado"] == 3:
-                rech = rech + 1
+                resumen["rechazadas"] += 1
             if s["estado"] in (0, 1) and s["vence"] < hoy:
-                venc = venc + 1
-            if s["area"] in por_area:
-                por_area[s["area"]] = por_area[s["area"]] + 1
-            else:
-                por_area[s["area"]] = 1
+                resumen["vencidas"] += 1
+            area = s["area"]
+            resumen["por_area"][area] = resumen["por_area"].get(area, 0) + 1
+        return resumen
+
+    def _imprimir_reporte_texto(self, resumen):
+        print("=== Reporte de solicitudes ===")
+        print("Total: " + str(resumen["total"]))
+        print("Pendientes: " + str(resumen["pendientes"]))
+        print("En proceso: " + str(resumen["en_proceso"]))
+        print("Resueltas: " + str(resumen["resueltas"]))
+        print("Rechazadas: " + str(resumen["rechazadas"]))
+        print("Vencidas sin cerrar: " + str(resumen["vencidas"]))
+        print("Por area:")
+        for area in sorted(resumen["por_area"]):
+            print("  " + area + ": " + str(resumen["por_area"][area]))
+
+    def _imprimir_reporte_csv(self, resumen):
+        print("metrica,valor")
+        print("total," + str(resumen["total"]))
+        print("pendientes," + str(resumen["pendientes"]))
+        print("en_proceso," + str(resumen["en_proceso"]))
+        print("resueltas," + str(resumen["resueltas"]))
+        print("rechazadas," + str(resumen["rechazadas"]))
+        print("vencidas," + str(resumen["vencidas"]))
+        for area in sorted(resumen["por_area"]):
+            print("area:" + area + "," + str(resumen["por_area"][area]))
+
+    def reporte(self, formato):
+        hoy = datetime.now().strftime("%Y-%m-%d")
+        resumen = self._resumen_reporte(hoy)
         if formato == "texto":
-            print("=== Reporte de solicitudes ===")
-            print("Total: " + str(total))
-            print("Pendientes: " + str(pend))
-            print("En proceso: " + str(proc))
-            print("Resueltas: " + str(res))
-            print("Rechazadas: " + str(rech))
-            print("Vencidas sin cerrar: " + str(venc))
-            print("Por area:")
-            for a in sorted(por_area):
-                print("  " + a + ": " + str(por_area[a]))
+            self._imprimir_reporte_texto(resumen)
         elif formato == "csv":
-            print("metrica,valor")
-            print("total," + str(total))
-            print("pendientes," + str(pend))
-            print("en_proceso," + str(proc))
-            print("resueltas," + str(res))
-            print("rechazadas," + str(rech))
-            print("vencidas," + str(venc))
-            for a in sorted(por_area):
-                print("area:" + a + "," + str(por_area[a]))
+            self._imprimir_reporte_csv(resumen)
         else:
             print("Error: formato de reporte invalido: " + formato)
             return False
@@ -348,7 +403,8 @@ def main():
         f = None
         if len(a) > 6:
             f = a[6]
-        r = s.registrar(a[2], a[3], a[4], a[5], f, "web", "")
+        datos = DatosRegistro(a[2], a[3], a[4], a[5], f)
+        r = s.registrar(datos)
     elif a[1] == "estado":
         r = s.cambiar_estado(a[2], a[3])
     elif a[1] == "asignar":
