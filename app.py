@@ -327,51 +327,61 @@ class Sistema:
             )
         return l
 
-    def reporte(self, formato):
-        hoy = datetime.now().strftime("%Y-%m-%d")
-        total = len(self.d["solicitudes"])
-        pend = 0
-        proc = 0
-        res = 0
-        rech = 0
-        venc = 0
-        por_area = {}
+    def _resumen_reporte(self, hoy):
+        resumen = {
+            "total": len(self.d["solicitudes"]),
+            "pendientes": 0,
+            "en_proceso": 0,
+            "resueltas": 0,
+            "rechazadas": 0,
+            "vencidas": 0,
+            "por_area": {},
+        }
         for s in self.d["solicitudes"]:
             if s["estado"] == 0:
-                pend = pend + 1
+                resumen["pendientes"] += 1
             if s["estado"] == 1:
-                proc = proc + 1
+                resumen["en_proceso"] += 1
             if s["estado"] == 2:
-                res = res + 1
+                resumen["resueltas"] += 1
             if s["estado"] == 3:
-                rech = rech + 1
+                resumen["rechazadas"] += 1
             if s["estado"] in (0, 1) and s["vence"] < hoy:
-                venc = venc + 1
-            if s["area"] in por_area:
-                por_area[s["area"]] = por_area[s["area"]] + 1
-            else:
-                por_area[s["area"]] = 1
+                resumen["vencidas"] += 1
+            area = s["area"]
+            resumen["por_area"][area] = resumen["por_area"].get(area, 0) + 1
+        return resumen
+
+    def _imprimir_reporte_texto(self, resumen):
+        print("=== Reporte de solicitudes ===")
+        print("Total: " + str(resumen["total"]))
+        print("Pendientes: " + str(resumen["pendientes"]))
+        print("En proceso: " + str(resumen["en_proceso"]))
+        print("Resueltas: " + str(resumen["resueltas"]))
+        print("Rechazadas: " + str(resumen["rechazadas"]))
+        print("Vencidas sin cerrar: " + str(resumen["vencidas"]))
+        print("Por area:")
+        for area in sorted(resumen["por_area"]):
+            print("  " + area + ": " + str(resumen["por_area"][area]))
+
+    def _imprimir_reporte_csv(self, resumen):
+        print("metrica,valor")
+        print("total," + str(resumen["total"]))
+        print("pendientes," + str(resumen["pendientes"]))
+        print("en_proceso," + str(resumen["en_proceso"]))
+        print("resueltas," + str(resumen["resueltas"]))
+        print("rechazadas," + str(resumen["rechazadas"]))
+        print("vencidas," + str(resumen["vencidas"]))
+        for area in sorted(resumen["por_area"]):
+            print("area:" + area + "," + str(resumen["por_area"][area]))
+
+    def reporte(self, formato):
+        hoy = datetime.now().strftime("%Y-%m-%d")
+        resumen = self._resumen_reporte(hoy)
         if formato == "texto":
-            print("=== Reporte de solicitudes ===")
-            print("Total: " + str(total))
-            print("Pendientes: " + str(pend))
-            print("En proceso: " + str(proc))
-            print("Resueltas: " + str(res))
-            print("Rechazadas: " + str(rech))
-            print("Vencidas sin cerrar: " + str(venc))
-            print("Por area:")
-            for a in sorted(por_area):
-                print("  " + a + ": " + str(por_area[a]))
+            self._imprimir_reporte_texto(resumen)
         elif formato == "csv":
-            print("metrica,valor")
-            print("total," + str(total))
-            print("pendientes," + str(pend))
-            print("en_proceso," + str(proc))
-            print("resueltas," + str(res))
-            print("rechazadas," + str(rech))
-            print("vencidas," + str(venc))
-            for a in sorted(por_area):
-                print("area:" + a + "," + str(por_area[a]))
+            self._imprimir_reporte_csv(resumen)
         else:
             print("Error: formato de reporte invalido: " + formato)
             return False
