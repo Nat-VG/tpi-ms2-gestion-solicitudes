@@ -4,11 +4,58 @@ import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import Enum
 
 ARCHIVO = "datos.json"
 
 # estados: 0 pendiente, 1 en proceso, 2 resuelta, 3 rechazada
 # prioridad: 1 alta, 2 media, 3 baja
+
+
+class TipoSolicitud(str, Enum):
+    CERTIFICADO = "certificado"
+    CAMBIO_COMISION = "cambio_comision"
+    EQUIVALENCIA = "equivalencia"
+    RECLAMO_NOTA = "reclamo_nota"
+
+    @property
+    def area(self):
+        return _AREA_POR_TIPO[self]
+
+
+_AREA_POR_TIPO = {
+    TipoSolicitud.CERTIFICADO: "Bedelia",
+    TipoSolicitud.CAMBIO_COMISION: "Bedelia",
+    TipoSolicitud.EQUIVALENCIA: "Departamento Academico",
+    TipoSolicitud.RECLAMO_NOTA: "Docencia",
+}
+
+
+class Prioridad(str, Enum):
+    ALTA = "alta"
+    MEDIA = "media"
+    BAJA = "baja"
+
+    @property
+    def codigo(self):
+        return _CODIGO_POR_PRIORIDAD[self]
+
+    @property
+    def dias_vencimiento(self):
+        return _DIAS_POR_PRIORIDAD[self]
+
+
+_CODIGO_POR_PRIORIDAD = {
+    Prioridad.ALTA: 1,
+    Prioridad.MEDIA: 2,
+    Prioridad.BAJA: 3,
+}
+
+_DIAS_POR_PRIORIDAD = {
+    Prioridad.ALTA: 2,
+    Prioridad.MEDIA: 5,
+    Prioridad.BAJA: 10,
+}
 
 
 @dataclass(frozen=True)
@@ -108,26 +155,18 @@ class Sistema:
         if est == None:
             print("Error: el legajo " + legajo + " no existe")
             return -1
-        if tipo == "certificado":
-            area = "Bedelia"
-        elif tipo == "cambio_comision":
-            area = "Bedelia"
-        elif tipo == "equivalencia":
-            area = "Departamento Academico"
-        elif tipo == "reclamo_nota":
-            area = "Docencia"
-        else:
+        try:
+            tipo_solicitud = TipoSolicitud(tipo)
+        except ValueError:
             print("Error: tipo de solicitud invalido: " + tipo)
             return -1
-        if prioridad == "alta":
-            p = 1
-        elif prioridad == "media":
-            p = 2
-        elif prioridad == "baja":
-            p = 3
-        else:
+        area = tipo_solicitud.area
+        try:
+            prioridad_solicitud = Prioridad(prioridad)
+        except ValueError:
             print("Error: prioridad invalida: " + prioridad)
             return -1
+        p = prioridad_solicitud.codigo
         if descripcion == None or len(descripcion.strip()) == 0:
             print("Error: la descripcion es obligatoria")
             return -1
@@ -138,12 +177,7 @@ class Sistema:
             fecha = datetime.now()
         else:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
-        if p == 1:
-            vence = fecha + timedelta(days=2)
-        elif p == 2:
-            vence = fecha + timedelta(days=5)
-        else:
-            vence = fecha + timedelta(days=10)
+        vence = fecha + timedelta(days=prioridad_solicitud.dias_vencimiento)
         nuevo_id = len(self.d["solicitudes"]) + 1
         s = {
             "id": nuevo_id,
