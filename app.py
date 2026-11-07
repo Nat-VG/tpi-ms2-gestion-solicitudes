@@ -2,12 +2,22 @@
 # primera version: todo junto para poder usarla ya
 import json
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 ARCHIVO = "datos.json"
 
 # estados: 0 pendiente, 1 en proceso, 2 resuelta, 3 rechazada
 # prioridad: 1 alta, 2 media, 3 baja
+
+
+@dataclass(frozen=True)
+class DatosRegistro:
+    legajo: str
+    tipo: str
+    prioridad: str
+    descripcion: str
+    fecha: str | None = None
 
 
 class Sistema:
@@ -85,7 +95,12 @@ class Sistema:
         print("Listo: cargamos los datos de ejemplo")
         return True
 
-    def registrar(self, legajo, tipo, prioridad, descripcion, fecha_str, canal, observaciones):
+    def registrar(self, datos: DatosRegistro):
+        legajo = datos.legajo
+        tipo = datos.tipo
+        prioridad = datos.prioridad
+        descripcion = datos.descripcion
+        fecha_str = datos.fecha
         est = None
         for e in self.d["estudiantes"]:
             if e["legajo"] == legajo:
@@ -344,7 +359,8 @@ def main():
         f = None
         if len(a) > 6:
             f = a[6]
-        r = s.registrar(a[2], a[3], a[4], a[5], f, "web", "")
+        datos = DatosRegistro(a[2], a[3], a[4], a[5], f)
+        r = s.registrar(datos)
     elif a[1] == "estado":
         r = s.cambiar_estado(a[2], a[3])
     elif a[1] == "asignar":
