@@ -20,6 +20,16 @@ class Sistema:
         except:
             pass
 
+    def _guardar(self):
+        with open(ARCHIVO, "w", encoding="utf-8") as archivo:
+            json.dump(self.d, archivo, indent=2, ensure_ascii=False)
+
+    def _buscar_solicitud(self, id_solicitud):
+        for solicitud in self.d["solicitudes"]:
+            if solicitud["id"] == int(id_solicitud):
+                return solicitud
+        return None
+
     def init(self):
         self.d = {
             "estudiantes": [
@@ -71,9 +81,7 @@ class Sistema:
                 },
             ],
         }
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         print("Listo: cargamos los datos de ejemplo")
         return True
 
@@ -136,9 +144,7 @@ class Sistema:
         }
         # canal y observaciones por ahora no se usan
         self.d["solicitudes"].append(s)
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         print(
             "Listo: solicitud #"
             + str(nuevo_id)
@@ -151,10 +157,7 @@ class Sistema:
         return nuevo_id
 
     def cambiar_estado(self, id, nuevo):
-        x = None
-        for s in self.d["solicitudes"]:
-            if s["id"] == int(id):
-                x = s
+        x = self._buscar_solicitud(id)
         if x == None:
             print("Error: no existe la solicitud #" + str(id))
             return False
@@ -185,9 +188,7 @@ class Sistema:
             print("Error: no se puede volver a pendiente")
             return False
         x["estado"] = n
-        f = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, f, indent=2, ensure_ascii=False)
-        f.close()
+        self._guardar()
         for e in self.d["estudiantes"]:
             if e["legajo"] == x["legajo"]:
                 print(
@@ -202,10 +203,7 @@ class Sistema:
         return True
 
     def asignar(self, id, resp_id):
-        x = None
-        for s in self.d["solicitudes"]:
-            if s["id"] == int(id):
-                x = s
+        x = self._buscar_solicitud(id)
         if x == None:
             print("Error: no existe la solicitud #" + str(id))
             return False
@@ -223,9 +221,7 @@ class Sistema:
             print("Error: " + r["nombre"] + " no pertenece al area " + x["area"])
             return False
         x["responsable"] = resp_id
-        out = open(ARCHIVO, "w", encoding="utf-8")
-        json.dump(self.d, out, indent=2, ensure_ascii=False)
-        out.close()
+        self._guardar()
         print("Listo: solicitud #" + str(x["id"]) + " asignada a " + r["nombre"])
         return True
 
